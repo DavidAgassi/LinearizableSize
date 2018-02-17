@@ -1,7 +1,7 @@
-package sizer_warppers;
+package sizable.sizable_warppers;
 
-import lineaizable_size.LinearizableCounter;
-import lineaizable_size.map.SizableMap;
+import sizable.LinearizableCounter;
+import sizable.SizableMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

@@ -1,6 +1,6 @@
-package sizer_warppers;
+package sizable.semi_sizable_wrappers;
 
-import lineaizable_size.collection.SizableCollection;
+import sizable.SizableCollection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
 

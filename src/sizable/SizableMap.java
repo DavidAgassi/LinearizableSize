@@ -1,6 +1,5 @@
-package lineaizable_size.map;
+package sizable;
 
-import lineaizable_size.Sizable;
 import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
 

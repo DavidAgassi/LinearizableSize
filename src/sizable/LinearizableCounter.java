@@ -1,4 +1,4 @@
-package lineaizable_size;
+package sizable;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;

@@ -1,6 +1,6 @@
-package sizer_warppers;
+package sizable.semi_sizable_wrappers;
 
-import lineaizable_size.map.SizableMap;
+import sizable.SizableMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 

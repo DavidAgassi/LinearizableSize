@@ -1,6 +1,5 @@
-package lineaizable_size.collection;
+package sizable;
 
-import lineaizable_size.Sizable;
 import java.util.Collection;
 import java.util.concurrent.atomic.LongAdder;
 
