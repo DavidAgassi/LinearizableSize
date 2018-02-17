@@ -8,6 +8,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class AtomicQueueCollection<E> extends AtomicSizerCollection<E, ConcurrentLinkedQueue<E>> {
     public AtomicQueueCollection(){
-        super(new ConcurrentLinkedQueue<E>());
+        super(new ConcurrentLinkedQueue<>());
     }
 }

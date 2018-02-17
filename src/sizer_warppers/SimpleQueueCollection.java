@@ -9,6 +9,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SimpleQueueCollection<E> extends SimpleSizerCollection<E, ConcurrentLinkedQueue<E>> {
 public SimpleQueueCollection(){
-        super(new ConcurrentLinkedQueue<E>());
+        super(new ConcurrentLinkedQueue<>());
         }
 }

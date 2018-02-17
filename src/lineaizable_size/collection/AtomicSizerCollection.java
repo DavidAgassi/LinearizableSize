@@ -3,8 +3,6 @@ package lineaizable_size.collection;
 import lineaizable_size.LinearizableCounter;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by Liat n on 17/02/2018.

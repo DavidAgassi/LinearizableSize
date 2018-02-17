@@ -1,6 +1,5 @@
 package lineaizable_size.map;
 
-import java.util.Collection;
 import java.util.Map;
 
 /**

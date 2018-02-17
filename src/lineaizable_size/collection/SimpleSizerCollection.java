@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.LongAdder;
 public class SimpleSizerCollection<E, A extends Collection<E>> extends SizerCollection<E, A> {
     private LongAdder minSize = new LongAdder();
     private LongAdder maxSize = new LongAdder();
-    private A adt;
     public SimpleSizerCollection(A adt){
         super(adt);
     }

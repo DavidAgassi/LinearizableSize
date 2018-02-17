@@ -9,7 +9,6 @@ import java.util.Map;
 public class AtomicSizerMap<K, V, A extends Map<K,V>> extends SizerMap<K, V, A>{
     private LinearizableCounter minSize = new LinearizableCounter();
     private LinearizableCounter maxSize = new LinearizableCounter();
-    private A adt;
     public AtomicSizerMap(A adt){
         super(adt);
     }

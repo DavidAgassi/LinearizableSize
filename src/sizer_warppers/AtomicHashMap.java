@@ -8,6 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AtomicHashMap<K,V> extends AtomicSizerMap<K, V, ConcurrentHashMap<K,V>> {
     public AtomicHashMap(){
-        super(new ConcurrentHashMap<K,V>());
+        super(new ConcurrentHashMap<>());
     }
 }

@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.LongAdder;
 public class SimpleSizerMap<K, V, A extends Map<K,V>> extends SizerMap<K, V, A> {
     private LongAdder minSize = new LongAdder();
     private LongAdder maxSize = new LongAdder();
-    private A adt;
     public SimpleSizerMap(A adt){
         super(adt);
     }
