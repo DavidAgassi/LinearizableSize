@@ -17,22 +17,22 @@ public class SizableMap<K, V, M extends Map<K,V>, C extends LongAdder> extends S
         }
     }
     public V put(K key, V value){
-        maxSize.add(1);
+        maxSize.increment();
         V ret = map.put(key, value);
         if(ret == null){
-            minSize.add(1);
+            minSize.increment();
         }else {
-            maxSize.add(-1);
+            maxSize.decrement();
         }
         return ret;
     }
     public V remove(K key){
-        minSize.add(-1);
+        minSize.decrement();
         V ret = map.remove(key);
         if(ret!=null){
-            maxSize.add(-1);
+            maxSize.decrement();
         }else {
-            minSize.add(1);
+            minSize.increment();
         }
         return ret;
     }

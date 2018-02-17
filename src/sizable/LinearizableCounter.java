@@ -12,6 +12,14 @@ public class LinearizableCounter extends LongAdder{
         dirty.set(true);
         super.add(x);
     }
+    public void increment(){
+        dirty.set(true);
+        super.increment();
+    }
+    public void decrement(){
+        dirty.set(true);
+        super.decrement();
+    }
     public long sum(){
         long s;
         while (true){
@@ -21,5 +29,13 @@ public class LinearizableCounter extends LongAdder{
                 return s;
             }
         }
+    }
+    public long sumThenReset(){
+        dirty.set(true);
+        return super.sumThenReset();
+    }
+    public void reset(){
+        dirty.set(true);
+        super.reset();
     }
 }

@@ -13,22 +13,22 @@ public class SizableCollection<E, A extends Collection<E>, C extends LongAdder> 
         this.collection = adt;
     }
     public boolean add(E element){
-        maxSize.add(1);
+        maxSize.increment();
         if(collection.add(element)){
-            minSize.add(1);
+            minSize.increment();
             return true;
         }else {
-            maxSize.add(-1);
+            maxSize.decrement();
             return false;
         }
     }
     public boolean remove(E element){
-        minSize.add(-1);
+        minSize.decrement();
         if(collection.remove(element)){
-            maxSize.add(-1);
+            maxSize.decrement();
             return true;
         }else {
-            minSize.add(1);
+            minSize.increment();
             return false;
         }
     }
