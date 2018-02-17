@@ -6,18 +6,17 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * Created by Liat n on 17/02/2018.
  */
-public class LinearizableCounter{
-    private LongAdder counter = new LongAdder();
+public class LinearizableCounter extends LongAdder{
     private AtomicBoolean dirty = new AtomicBoolean();
     public void add(long x){
         dirty.set(true);
-        counter.add(x);
+        super.add(x);
     }
     public long sum(){
         long s;
         while (true){
             dirty.set(false);
-            s = counter.sum();
+            s = super.sum();
             if(dirty.get()){
                 return s;
             }
