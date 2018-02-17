@@ -1,2 +1,2 @@
 # LinearizableSize
-Concurrennt, Thread safe size function implementaion and a few basic wrappers
+Concurrent, Thread safe size operation implementation and a few basic wrappers
