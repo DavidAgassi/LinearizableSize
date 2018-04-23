@@ -25,7 +25,7 @@ public class LinearizableCounter extends LongAdder{
         while (true){
             dirty.set(false);
             s = super.sum();
-            if(dirty.get()){
+            if(!dirty.get()){
                 return s;
             }
         }
