@@ -71,7 +71,7 @@
 \begin_body
 
 \begin_layout Title
-Linearizable size - project proposal
+Linearizable size
 \end_layout
 
 \begin_layout Author
@@ -288,11 +288,10 @@ size
 In this paper I will create a Java Abstract Class, and implement a few wrappers
  to common ADTs
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
-CuncurentBST - (copy from internet?), Java ConcurrentHashMap, Java ConcurrentLin
-kedQueue
+SkipList LockFreeAVL ConcurrentHMAP 
 \end_layout
 
 \end_inset
@@ -306,7 +305,7 @@ sum()
  that returns the adders value across threads.
  This method is a simple sum of differences across threads and isn't linearizabl
 e.
- I will create 2 counters based on the LongAdder, one not linearizable,
+ I will create two counters based on the LongAdder, one not linearizable,
  and the other is
 \begin_inset Foot
 status collapsed
@@ -321,10 +320,350 @@ linearizable.
  The second counter should be more prone to starvation.
 \end_layout
 
-\begin_layout Part
-Proof
+\begin_layout Abstract
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
 \end_layout
 
+\begin_layout Abstract
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part
+Theoretical Explanation
+\end_layout
+
+\begin_layout Section
+Preface
+\end_layout
+
+\begin_layout Subsection
+Motivation
+\end_layout
+
+\begin_layout Standard
+On many ADTs it is common practice to use a 
+\series bold
+size
+\series default
+ attribute that states the amount of elements stored in the ADT.
+ Typically, in many simple cases, the 
+\series bold
+size
+\series default
+ attribute is easy to define and calculate.
+ If there are no concurrent operations manipulating the ADT, the size is
+ defined as the amount of elements stored in the ADT at each point in the
+ executions history, and can be calculated by iterating over the ADT, therefor
+ blocking it.
+ In concurrent ADT's blocking the whole ADT is bad practice and beats the
+ point.
+ If all operations on the ADT are linearizable, then for all execution the
+ 
+\series bold
+size
+\series default
+ is always well defined, mathematically speaking, but is hard to calculate.
+ As there is a sequential history that matches each run the size is defined
+ as above, as the amount of elements stored in the ADT for each point in
+ the sequential history.
+ But now it is not permitted to block the whole ADT in order to calculate
+ the 
+\series bold
+size
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+The first insight is that the 
+\series bold
+size
+\series default
+ may depend on all the elements, but the changes in it are easy to calculate
+ from the operations.
+ If we stored a counter and for every operation, as it executed in the lineariza
+tion point, we would update it with regard to it's success/fail, That counter
+ would store the 
+\series bold
+size
+\series default
+ correctly.
+ This kind of operation looks like some kind of CAS, but current architectures
+ don't support this kind of operation, and this would also create a bottle-neck
+ on the 
+\series bold
+size
+\series default
+'s memory location, effectively blocking as well the whole ADT.
+\end_layout
+
+\begin_layout Standard
+We will further relax the problem by calculating the 
+\series bold
+size
+\series default
+ on demand instead of saving it in a specific location, making it a linearizable
+ operation.
+ The first implication is that for some stages in the execution, even though
+ the size is theoretically defined, it is unreachable under the execution's
+ timing.
+ On the other hand, we get a non-blocking correct 
+\series bold
+size
+\series default
+ of the ADT.
+ This is very similar to many linearizable operations that have some king
+ of validation and won't return until they succeed.
+\end_layout
+
+\begin_layout Standard
+Thus allowing us to wrap any concurrent ADT and being able to get it's size
+ without blocking it.
+\end_layout
+
+\begin_layout Subsection
+Solution's Outline
+\end_layout
+
+\begin_layout Standard
+An attribute is usually considered as a single memory location that is easily
+ accessed.
+ In this solution we will split the 
+\series bold
+size 
+\series default
+attribute into 2 different attributes, minSize and maxSize and once they
+ agree on the size e.g 
+\begin_inset Formula $minSize=maxSize$
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Practically 
+\begin_inset Formula $minSize\geq maxSize$
+\end_inset
+
+ 
+\end_layout
+
+\end_inset
+
+, we can determine that 
+\series bold
+size
+\series default
+ is equal to them as well.
+ Now each attribute becomes a counter that is shared across threads and
+ is updated locally.
+ On an event of Size() being called, the counters are summed across threads
+ and compared until they agree.
+\end_layout
+
+\begin_layout Standard
+These attributes represent the upper and lower bound of the ADT's size.
+ For example, on insertion, the upper bound maxSize is incremented at the
+ beginning, and once it ended, if it succeeded, the lower bound is incremented,
+ else, the upper bound is decremented back to it's original value.
+ By doing this, the upper and lower bounds always pull away at the beginning
+ of each operation and pull closer at the end.
+ If they agree, this also means that at this point no operation is altering
+ the ADT
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Not regarding the optimization 
+\begin_inset Formula $\geq$
+\end_inset
+
+ in previous footer.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Depending on the linearizability of the counters, this solution is linearizable.
+ 
+\end_layout
+
+\begin_layout Section
+Sizable ADT wrapper
+\end_layout
+
+\begin_layout Subsection
+Counters
+\end_layout
+
+\begin_layout Standard
+At the base for this function lay two counters.
+ A counter in this context is basically a memory location that is updated
+ by adding and subtracting instead of just overriding the value.
+ This allows us to decentralize the actual location of of the counter and
+ have every thread change the counter as it sees fit.
+ In order to read the counter, you need to run across all threads collect
+ the differences it made.
+ The sum of all the differences make up the counter's value.
+\end_layout
+
+\begin_layout Standard
+Summing up a counter could be done in a non linearizable fashion as just
+ running across all threads with no validation, or in a linearizable fashion.
+ For the sake of this section we assume our counter is linearizable.
+\end_layout
+
+\begin_layout Subsection
+Linearizable getSize
+\end_layout
+
+\begin_layout Standard
+Each ADT has a insert/add method that may increase it's size and a delete/remove
+ that may decrease it.
+ Assuming these operation returns true on success and false on fail, we
+ are able to wrap these methods as following.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+def add(value){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+maxaddr.inc()
+\end_layout
+
+\begin_layout LyX-Code
+if(ADT.add(value)):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+minaddr.inc()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+maxaddr.dec()
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+def remove(value){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+minaddr.dec()
+\end_layout
+
+\begin_layout LyX-Code
+if(ADT.remove(value)):
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+maxaddr.dec()
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+minaddr.inc()
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Size wrapper
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Notice that at the beginning of each operation the counters move apart and
+ at the end they come closer depending on the result.
+ We will define the first effect as the initial inc/dec of a counter at
+ the beginning of the call, and the second effect as the later 
+\begin_inset Quotes eld
+\end_inset
+
+fix
+\begin_inset Quotes erd
+\end_inset
+
+ to the counters.
+ Now we can say that the first effects drive the counters apart and the
+ second effects bring them closer.
+ We can think of these counters as the upper and lower bound on the size
+ of the ADT.
+\end_layout
+
+\begin_layout Standard
+Now we will use these counters to evaluate the size of the ADT.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+def getSize(){
+\end_layout
+
+\begin_deeper
 \begin_layout LyX-Code
 max = maxaddr.sum()
 \end_layout
@@ -367,8 +706,654 @@ return min
 }
 \end_layout
 
+\end_deeper
+\begin_layout LyX-Code
+}
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+getSize
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Using the assumption from before we get that once both counters agree and
+ size is returned we there was a point in time where the size 
+\series bold
+was
+\series default
+, as in actually defined, as the return value.
+ When returning a value the deciding counter is the counter that was read
+ first.
+ For example if we return from the second IF statement the deciding counter
+ is the minaddr counter.
+ Agreeing is stating that the upper bound is smaller or equal to the lower
+ bound, in this in between reading both bound there was an actual point
+ in time where the ADT was at the size of the deciding counter.
+ The key principle here is that although the exact linearization point is
+ not known, it lays between both reads.
+\end_layout
+
+\begin_layout Standard
+It is possible that between reads of both counter the size of the ADT has
+ varied allot, but we know that it did have the value in the deciding counter
+ in the meantime.
+ For example, lets say that the deciding counter was minadder, therefor
+ we know that the at the beginning there where ad least minaddr elements
+ in the ADT.
+ Also, the upper bound has receded below the lower bound, as is there where
+ more 
+\series bold
+successful
+\series default
+ removes then 
+\series bold
+potentials
+\series default
+ adds in the meantime.
+ We can conclude that the size was at one point the size in minadder.
+\end_layout
+
+\begin_layout Section
+Linearizable Counter
+\end_layout
+
+\begin_layout Subsection
+Motivation
+\end_layout
+
+\begin_layout Standard
+The reason the counter need to be linearizable is that without it we can't
+ find the exact sum at each time, and results may very of the correct sum.
+ For example imagine a naive summation of a counter along threads.
+ Now imagine the following sequence:
+\end_layout
+
+\begin_layout Enumerate
+th1: starts add, maxaddr+=1
+\end_layout
+
+\begin_layout Enumerate
+th2: starts remove minaddr-=1
+\end_layout
+
+\begin_layout Enumerate
+th2: successful remove, maxaddr-=1
+\end_layout
+
+\begin_layout Enumerate
+th1: successful add minaddr+=1
+\end_layout
+
+\begin_layout Standard
+Now imagine that the size reads 1 and 4 only.
+ This can happen if after 1 maxaddr is read correctly but minaddr is misread
+ and misses 2.
+ we get a wrong result from size, a read where it is bigger by 1 from any
+ time in the middle.
+\end_layout
+
+\begin_layout Subsection
+Dirty bit method
+\end_layout
+
+\begin_layout Standard
+We will use a atomic dirty bit that is set once the counter is tempered
+ with and on summation it is cleared and tested at the end.
+ This means we now have a single bottle neck for every counter, but it is
+ atomic and is much more common practice.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout LyX-Code
+add(x){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+dirty.set(true);
+\end_layout
+
+\begin_layout LyX-Code
+counter.add(x);
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout LyX-Code
+public long sum(){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+while (true){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+dirty.set(false);
+\end_layout
+
+\begin_layout LyX-Code
+s = counter.sum();
+\end_layout
+
+\begin_layout LyX-Code
+if(!dirty.get()){
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+return s;
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+}
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dirty-Bit Counter Wrapper
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Now since before every tempering with the counter in each thread it notifies
+ all the other thread of the change.
+ Now on every sum, we can make sure no changes went undetected during the
+ summing operation making it linearizable, as in we can know the correct
+ sum regarding it being decentralized among threads at the moment it the
+ function returned.
+\end_layout
+
+\begin_layout Subsection
+Semi-Sizable
+\end_layout
+
+\begin_layout Standard
+In the future implementations we define the naive counter semi-linearizable
+ and I will compare both performances.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
 \begin_layout Part
-Java implementation
+Java implementation and Performance
+\end_layout
+
+\begin_layout Section
+Outline
+\end_layout
+
+\begin_layout Subsection
+Java Implementation
+\end_layout
+
+\begin_layout Standard
+Java has two main ATD types: Collection, Map.
+ Most standard ADT's extend them and so it will be useful to make a generic
+ wrapper for them.
+ I have created an abstract class Sizable that accepts a counter class that
+ performs the getSize regarding to those counters, then extensions of that
+ class that wraps both Java Collection and Java Map interfaces that use
+ the counters in insertion end deletions.
+ For counters anything that extends Java's LongAdder may be used as to create
+ Sizable ADT's.
+\end_layout
+
+\begin_layout Standard
+Also, I have created a linearizable counter as described before and wrapped
+ the basic Java ConcurrentHashMap (Java Map) and Java ConcurrentQueue (Java
+ Collection) for demonstration.
+\end_layout
+
+\begin_layout Subsection
+Test Methodology
+\end_layout
+
+\begin_layout Standard
+I have adapted the given BitBucket repository
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+https://bitbucket.org/trbot86/implementations
+\end_layout
+
+\end_inset
+
+ which contains a collection of concurrent algorithms and a test suit.
+ I have adapted three
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+SkipList LockFreeAVL ConcurrentHMAP
+\end_layout
+
+\end_inset
+
+ of them to run under my wrappers and added a timer test for the size operation.
+\end_layout
+
+\begin_layout Section
+Specifics
+\end_layout
+
+\begin_layout Subsection
+Sizable 
+\end_layout
+
+\begin_layout Standard
+An abstract class Sizable<C extends LongAdder>
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+C stands for a counter class
+\end_layout
+
+\end_inset
+
+ that contains:
+\end_layout
+
+\begin_layout LyX-Code
+protected C minSize; protected C maxSize;
+\end_layout
+
+\begin_layout LyX-Code
+public long getSize()
+\end_layout
+
+\begin_layout Subsubsection
+extensions
+\end_layout
+
+\begin_layout Standard
+Both extension wrap an ADT and implement the insertion and deletion methods
+ by wrapping the ADT's method.
+\end_layout
+
+\begin_layout Itemize
+class SizableCollection<E, A extends Collection<E>, C extends LongAdder>
+ extends Sizable
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+private A collection;
+\end_layout
+
+\begin_layout Itemize
+public boolean add(E element)
+\end_layout
+
+\begin_layout Itemize
+public boolean remove(E element)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+class SizableMap<K, V, M extends Map<K,V>, C extends LongAdder> extends
+ Sizable<C>
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+private M map;
+\end_layout
+
+\begin_layout Itemize
+public V put(K key, V value)
+\end_layout
+
+\begin_layout Itemize
+public V remove(K key)
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Counters
+\end_layout
+
+\begin_layout Standard
+Java has a naive concurrent counter LongAdder, I have extended it using
+ an AtomicBoolean to create a linearizable counter.
+\end_layout
+
+\begin_layout Standard
+class LinearizableCounter extends LongAdder:
+\end_layout
+
+\begin_layout Itemize
+private AtomicBoolean dirty;
+\end_layout
+
+\begin_layout Itemize
+public void add(long x)
+\end_layout
+
+\begin_layout Itemize
+public long sum()
+\end_layout
+
+\begin_layout Standard
+Now having both Counters and ADT's wrappers I was able to make Sizable and
+ Semi-Sizable wrapper for basic Java ADT's such as ConcurrentHashMap and
+ ConcurrentQueue.
+\end_layout
+
+\begin_layout Subsection
+Wrap For Test
+\end_layout
+
+\begin_layout Subsubsection
+Wrapping the ADT's
+\end_layout
+
+\begin_layout Standard
+I have wrapped the following BitBucket repository 
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+https://bitbucket.org/trbot86/implementations (footer 7)
+\end_layout
+
+\end_inset
+
+ and implemented the following adapters using the SizableMap extension:
+ 
+\end_layout
+
+\begin_layout Enumerate
+SkipList
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+SemiSizableSkipList
+\end_layout
+
+\begin_layout Enumerate
+SizableSkipList
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+ConcurrentHashMap
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+SemiSizableConcurrentHashMap
+\end_layout
+
+\begin_layout Enumerate
+SizableConcurrentHashMap
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+LockFreeAVL
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+SemiSizableLockFreeAVL
+\end_layout
+
+\begin_layout Enumerate
+SizableLockFreeAVL
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+Testing the Size Operation
+\end_layout
+
+\begin_layout Standard
+Also I have changes the running scheme to include size operations by manipulatin
+g the trail Ratio and adding a size attribute and call.
+ In order to test the duration and throughput of the size operation I have
+ timed
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+with System.nanoTime()
+\end_layout
+
+\end_inset
+
+ it.
+ In order to create a valid comparison, the original ADT's size function
+ was empty so we can neutralize the timing system calls and evaluate just
+ the duration of the size function.
+ Additionaly, I have run a test with no Size Operations in order to test
+ the overhead of the Sizable extension.
+\end_layout
+
+\begin_layout Subsubsection
+Testing Scheme
+\end_layout
+
+\begin_layout Standard
+I have run trails with the following parameters for each ADT:
+\end_layout
+
+\begin_layout Enumerate
+ADT's: SkipList, ConcurrentHashMap, LockFreeAVL.
+\end_layout
+
+\begin_layout Enumerate
+Wrappers: Original, SemiSizable, SemiSizable.
+\end_layout
+
+\begin_layout Enumerate
+Key Ratios
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Key size: 100, 1000, 1000000
+\end_layout
+
+\begin_layout Enumerate
+ops ratios (ins_del_size): 33_33_34, 20_10_20, 45_45_10, 50_50_0
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Threads: 1, 2, 4, 8, 16, 32.
+\end_layout
+
+\begin_layout Enumerate
+Trails:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+length: 10s.
+\end_layout
+
+\begin_layout Enumerate
+repetitions: 8.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Test Server:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+name: rack-mad-03
+\end_layout
+
+\begin_layout Enumerate
+cores: 2
+\end_layout
+
+\begin_layout Enumerate
+threads per core: 22
+\end_layout
+
+\begin_layout Enumerate
+total threads: 44 (didn't use hyper-threads)
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+Linearization Testing
+\end_layout
+
+\begin_layout Standard
+In order to test for the linearization of the solution, I have manipulated
+ the tests getKeySum to evaluate the size of the ADT.
+ In other words, for each operation the keySum added 1 on addition success
+ and subcontracted 1on deletion success, and at the end compared to the
+ getSize 
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+in steady state.
+\end_layout
+
+\end_inset
+
+.
+ If all operations where detected correctly getSize should return the same
+ size as the test expected.
+\end_layout
+
+\begin_layout Section
+Evaluation
+\end_layout
+
+\begin_layout Subsection
+expectation
+\end_layout
+
+\begin_layout Subsubsection
+Linearizability
+\end_layout
+
+\begin_layout Standard
+We are expecting the size reported form getSize in steady state to be the
+ sum of operations across all threads.
+ I it fails at that, I might as well just not hand in this paper...
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Performance
+\end_layout
+
+\begin_layout Description
+Wrapper
+\begin_inset space ~
+\end_inset
+
+overhead: The wrapper should slow down the Ops performed, but not by much
+ as they are a constant overhead, 
+\begin_inset Formula $O\left(1\right)$
+\end_inset
+
+.
+ The Linearizable counter has a bottle-neck on the dirty bit that will slow
+ the system down even further, as the number of threads grow, the overhead
+ on the linearizable counter should grow.
+\end_layout
+
+\begin_layout Description
+Size
+\begin_inset space ~
+\end_inset
+
+Operation: The size operation should slow with the increase in the thread
+ count
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+more precisely, with more manipulations to the ADT.
+\end_layout
+
+\end_inset
+
+, as it would fail more.
+ The Linearizable counter should slow down significantly as it has to sum
+ 2 Linearizable counters at a high rate, with the dirty-bit bottle-neck.
+ 
+\end_layout
+
+\begin_layout Subsection
+results
+\end_layout
+
+\begin_layout Section
+Conclusion and expansions
+\end_layout
+
+\begin_layout Subsection
+Conclusion
+\end_layout
+
+\begin_layout Subsection
+further expansions
+\end_layout
+
+\begin_layout Standard
+Make the sizable extensions actually implement the Java Collection and Java
+ Map interfaces to make them easy to use.
 \end_layout
 
 \end_body
