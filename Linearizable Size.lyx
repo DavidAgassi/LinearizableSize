@@ -1342,6 +1342,15 @@ more precisely, with more manipulations to the ADT.
  2 Linearizable counters at a high rate, with the dirty-bit bottle-neck.
 \end_layout
 
+\begin_layout Description
+Key
+\begin_inset space ~
+\end_inset
+
+Range We are not expecting the key range to effect the rate of mutations
+ to and therefor effecting the throughput.
+\end_layout
+
 \begin_layout Subsection
 results
 \end_layout
@@ -1369,7 +1378,183 @@ Performance
 \end_layout
 
 \begin_layout Standard
-Wrapper overhead
+I have evaluated 3 ADT's, all graphs came out similar with different values,
+ in order to make this section more fluent I will only bring one ADT for
+ each section.
+ All plot could be found in the projects repository
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+Evaluation
+\backslash
+plots
+\end_layout
+
+\end_inset
+
+ as well with the generating script.
+ 
+\end_layout
+
+\begin_layout Description
+Wrapper
+\begin_inset space ~
+\end_inset
+
+overhead: 
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename Evaluation/plots/AVLTree_wrapper_throughput.png
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Wrapper Overhead
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+This plot shows the throughput of a thread in respect to the number of threads
+ running
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+key-range=
+\begin_inset Formula $10^{6}$
+\end_inset
+
+, load = 50% inserts 50% removes
+\end_layout
+
+\end_inset
+
+.
+ Under the current load all we do is test how much the wrapper slows the
+ ADT down.
+\begin_inset Newline newline
+\end_inset
+
+As predicted it seems like the SemiSizable wrapper has a minor effect, but
+ the Sizable deteriorates the throughput noticeably as the thread number
+ grows.
+\end_layout
+
+\begin_layout Description
+Size
+\begin_inset space ~
+\end_inset
+
+Operation: 
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename Evaluation/plots/AVLTree_size_duration.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+getSize Duration
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+This plot shows the duration of the get Size time with regards to the load
+ on the ADT and the wrapper type.
+ As predicted the SizeDuration increases the more threads there are and
+ the bigger the load is.
+ Slightly surprisingly, the SemiSizable is effected only in high loads
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+This growth function should be tested in the future
+\end_layout
+
+\end_inset
+
+.
+ As well as predicted once the load gets bigger, more mutations happen and
+ the Sizable getSize operation grows at a high rate and starves.
+\end_layout
+
+\begin_layout Description
+Key
+\begin_inset space ~
+\end_inset
+
+Range 
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename Evaluation/plots/SkipList_key_range.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Key Range effect on the throuput
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ In this plot we see the effect on the key range for a run with a load of
+ 33%insert 33% deletions 34%size on 16 threads.
+ It's hard to make to much conclusions from a 3 dot line, but as predicted
+ they seem stable.
+ an unexpected burst is seen in the regular ADT at a key range of 
+\begin_inset Formula $10^{4}$
+\end_inset
+
+, which appears in all graphs and I can not explain.
 \end_layout
 
 \begin_layout Section
@@ -1380,11 +1565,22 @@ Conclusion and expansions
 Conclusion
 \end_layout
 
+\begin_layout Standard
+It is possible to get a Non blocking size call, but it becomes prune to
+ starvation and is non scale-able even without even calling the size function
+ once.
+ On the other hand the SemiSizable extension an ADT might prove useful in
+ order to get a good approximation of the size in a non blocking manner.
+ We saw that the greates impact on the returning time occurred the bigger
+ the load is.
+ 
+\end_layout
+
 \begin_layout Subsection
 further expansions
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
 Make the sizable extensions actually implement the Java Collection and Java
  Map interfaces to make them easy to use.
 \end_layout
