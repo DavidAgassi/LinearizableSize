@@ -162,7 +162,7 @@ size
 \series default
  value precisely.
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 Based on 
@@ -288,7 +288,7 @@ size
 In this paper I will create a Java Abstract Class, and implement a few wrappers
  to common ADTs
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 SkipList LockFreeAVL ConcurrentHMAP 
@@ -1397,6 +1397,10 @@ plots
 
  as well with the generating script.
  
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Description
@@ -1405,6 +1409,14 @@ Wrapper
 \end_inset
 
 overhead: 
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset Float figure
 placement H
 wide false
@@ -1455,6 +1467,10 @@ key-range=
 As predicted it seems like the SemiSizable wrapper has a minor effect, but
  the Sizable deteriorates the throughput noticeably as the thread number
  grows.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Description
@@ -1463,6 +1479,14 @@ Size
 \end_inset
 
 Operation: 
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset Float figure
 placement H
 wide false
@@ -1498,7 +1522,7 @@ This plot shows the duration of the get Size time with regards to the load
  the bigger the load is.
  Slightly surprisingly, the SemiSizable is effected only in high loads
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 This growth function should be tested in the future
@@ -1509,6 +1533,10 @@ This growth function should be tested in the future
 .
  As well as predicted once the load gets bigger, more mutations happen and
  the Sizable getSize operation grows at a high rate and starves.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Description
@@ -1517,6 +1545,14 @@ Key
 \end_inset
 
 Range 
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset Float figure
 placement H
 wide false
@@ -1588,6 +1624,52 @@ Make the sizable extensions actually implement the Java Collection and Java
 \begin_layout Itemize
 Test the growth function of the SemiSizable function under even bigger loads
  to see if it blows as well.
+\end_layout
+
+\begin_layout Section
+References
+\end_layout
+
+\begin_layout Enumerate
+inspired by 
+\begin_inset Quotes eld
+\end_inset
+
+KiWi - OCC Key-Value Map
+\begin_inset Quotes erd
+\end_inset
+
+ by Assaf Yifrach, Niv Gabso
+\end_layout
+
+\begin_layout Enumerate
+Git repository: 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+https://github.com/FruitOwl/LinearizableSize
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Git test repository: 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+https://github.com/FruitOwl/LinearizableSizeTest
+\end_layout
+
+\end_inset
+
+ 
 \end_layout
 
 \end_body
