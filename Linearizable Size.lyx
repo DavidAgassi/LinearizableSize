@@ -818,7 +818,7 @@ We will use a atomic dirty bit that is set once the counter is tempered
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout LyX-Code
 add(x){
@@ -839,7 +839,7 @@ counter.add(x);
 \end_layout
 
 \begin_layout LyX-Code
-public long sum(){
+synchronized sum(){
 \end_layout
 
 \begin_deeper
@@ -904,6 +904,14 @@ Now since before every tempering with the counter in each thread it notifies
  summing operation making it linearizable, as in we can know the correct
  sum regarding it being decentralized among threads at the moment it the
  function returned.
+\end_layout
+
+\begin_layout Standard
+The Sum method has to be synchronized in order to prevent other sum operations
+ over-ridding a set bit while the sum is performed in order so to keep the
+ bit accessible only to mutations.
+ this will add additional overhead to the function of locking (getting a
+ lock) and queuing.
 \end_layout
 
 \begin_layout Subsection
@@ -1332,11 +1340,36 @@ more precisely, with more manipulations to the ADT.
 , as it would fail more.
  The Linearizable counter should slow down significantly as it has to sum
  2 Linearizable counters at a high rate, with the dirty-bit bottle-neck.
- 
 \end_layout
 
 \begin_layout Subsection
 results
+\end_layout
+
+\begin_layout Subsubsection
+Linearizability
+\end_layout
+
+\begin_layout Standard
+All check-sums where valid.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+See run.log file for tests
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Performance
+\end_layout
+
+\begin_layout Standard
+Wrapper overhead
 \end_layout
 
 \begin_layout Section

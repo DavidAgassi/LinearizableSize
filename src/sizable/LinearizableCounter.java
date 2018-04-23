@@ -20,7 +20,7 @@ public class LinearizableCounter extends LongAdder{
         dirty.set(true);
         super.decrement();
     }
-    public long sum(){
+    public synchronized long sum(){
         long s;
         while (true){
             dirty.set(false);
