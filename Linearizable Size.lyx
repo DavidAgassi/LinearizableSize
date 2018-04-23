@@ -1498,7 +1498,7 @@ This plot shows the duration of the get Size time with regards to the load
  the bigger the load is.
  Slightly surprisingly, the SemiSizable is effected only in high loads
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 This growth function should be tested in the future
@@ -1571,7 +1571,7 @@ It is possible to get a Non blocking size call, but it becomes prune to
  once.
  On the other hand the SemiSizable extension an ADT might prove useful in
  order to get a good approximation of the size in a non blocking manner.
- We saw that the greates impact on the returning time occurred the bigger
+ We saw that the greatest impact on the returning time occurred the bigger
  the load is.
  
 \end_layout
@@ -1583,6 +1583,11 @@ further expansions
 \begin_layout Itemize
 Make the sizable extensions actually implement the Java Collection and Java
  Map interfaces to make them easy to use.
+\end_layout
+
+\begin_layout Itemize
+Test the growth function of the SemiSizable function under even bigger loads
+ to see if it blows as well.
 \end_layout
 
 \end_body
